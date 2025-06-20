@@ -1,9 +1,9 @@
-html_content = '''<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Test desde PDF</title>
+  <title>Neri Test</title>
   <style>
     body { 
       font-family: Arial, sans-serif; 
@@ -123,8 +123,7 @@ html_content = '''<!DOCTYPE html>
 </head>
 <body>
   <div class="container">
-    <h1>📚 Test desde PDF</h1>
-    
+    <h1>Neri Test</h1>
     <div class="test-selector">
       <label for="pdfList"><strong>Elige un test:</strong></label>
       <select id="pdfList">
@@ -132,13 +131,10 @@ html_content = '''<!DOCTYPE html>
         <option value="test1.pdf">Test 1 - Tema 1</option>
         <option value="test2.pdf">Test 2 - Tema 2</option>
         <option value="test3.pdf">Test 3 - Tema 3</option>
-        <option value="matematicas.pdf">Matemáticas - Álgebra</option>
-        <option value="historia.pdf">Historia - Edad Media</option>
         <!-- Añade más tests aquí -->
       </select>
       <button id="loadPdfBtn">🚀 Cargar test</button>
     </div>
-    
     <div id="testContainer"></div>
     <div id="result"></div>
   </div>
@@ -159,7 +155,6 @@ html_content = '''<!DOCTYPE html>
         alert('⚠️ Por favor, selecciona un test');
         return;
       }
-      
       currentTest = pdfList.options[pdfList.selectedIndex].text;
       testContainer.innerHTML = '<div class="loading">📖 Cargando PDF y extrayendo preguntas...</div>';
       resultDiv.innerHTML = '';
@@ -172,20 +167,16 @@ html_content = '''<!DOCTYPE html>
         if (!response.ok) {
           throw new Error(`No se pudo cargar el archivo: ${response.status}`);
         }
-        
         const arrayBuffer = await response.arrayBuffer();
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
         let text = '';
-        
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
           const content = await page.getTextContent();
-          text += content.items.map(item => item.str).join(' ') + '\\n';
+          text += content.items.map(item => item.str).join(' ') + '\n';
         }
-        
         parseQuestions(text);
         renderTest();
-        
       } catch (error) {
         testContainer.innerHTML = `<div class="error">❌ Error al cargar el PDF: ${error.message}</div>`;
         console.error('Error:', error);
@@ -195,17 +186,11 @@ html_content = '''<!DOCTYPE html>
     };
 
     function parseQuestions(text) {
-      // Limpiar el texto
-      text = text.replace(/\\s+/g, ' ').trim();
-      
-      // Expresión regular mejorada para preguntas
-      const questionRegex = /(\\d+)\\s*\\.\\s*([^\\n]+?)(?=\\s*[A-D]\\s*\\))/g;
-      
+      text = text.replace(/\s+/g, ' ').trim();
+      const questionRegex = /(\d+)\s*\.\s*([^\n]+?)(?=\s*[A-D]\s*\))/g;
       let match;
       questions = [];
       let questionMatches = [];
-      
-      // Primero, encontrar todas las preguntas
       while ((match = questionRegex.exec(text)) !== null) {
         questionMatches.push({
           number: parseInt(match[1]),
@@ -214,33 +199,23 @@ html_content = '''<!DOCTYPE html>
           fullMatch: match[0]
         });
       }
-      
-      // Para cada pregunta, buscar sus respuestas
       questionMatches.forEach((qMatch, i) => {
         const startIndex = qMatch.index + qMatch.fullMatch.length;
         const endIndex = i < questionMatches.length - 1 ? 
           questionMatches[i + 1].index : text.length;
-        
         const answerBlock = text.slice(startIndex, endIndex);
-        
-        // Buscar respuestas en el bloque
-        const answerRegex = /([A-D])\\s*\\)\\s*([^A-D\\n]+?)(?=\\s*[A-D]\\s*\\)|$)/g;
+        const answerRegex = /([A-D])\s*\)\s*([^A-D\n]+?)(?=\s*[A-D]\s*\)|$)/g;
         let answers = [];
         let correct = null;
         let ansMatch;
-        
         while ((ansMatch = answerRegex.exec(answerBlock)) !== null) {
           let answerText = ansMatch[2].trim();
-          
-          // Verificar si tiene asterisco (respuesta correcta)
           if (answerText.includes('*')) {
             correct = answers.length;
-            answerText = answerText.replace(/\\*+/g, '').trim();
+            answerText = answerText.replace(/\*+/g, '').trim();
           }
-          
           answers.push(answerText);
         }
-        
         if (answers.length > 0) {
           questions.push({
             number: qMatch.number,
@@ -250,8 +225,6 @@ html_content = '''<!DOCTYPE html>
           });
         }
       });
-      
-      // Ordenar preguntas por número
       questions.sort((a, b) => a.number - b.number);
     }
 
@@ -274,7 +247,6 @@ D) Respuesta 4
         `;
         return;
       }
-      
       let html = `
         <div style="margin-bottom: 2em;">
           <h2>📝 ${currentTest}</h2>
@@ -282,14 +254,12 @@ D) Respuesta 4
         </div>
         <form id="testForm">
       `;
-      
       questions.forEach((q, i) => {
         html += `
           <div class="question">
             <div class="question-text">${q.number}. ${q.text}</div>
             <div class="answers">
         `;
-        
         q.answers.forEach((ans, j) => {
           html += `
             <label>
@@ -298,10 +268,8 @@ D) Respuesta 4
             </label>
           `;
         });
-        
         html += '</div></div>';
       });
-      
       html += '<button type="submit" style="width: 100%; padding: 1em; font-size: 1.1em;">✅ Corregir Test</button></form>';
       testContainer.innerHTML = html;
 
@@ -315,7 +283,6 @@ D) Respuesta 4
       let score = 0;
       let totalQuestions = questions.length;
       let unanswered = 0;
-      
       questions.forEach((q, i) => {
         const selected = document.querySelector(`input[name="q${i}"]:checked`);
         if (selected) {
@@ -326,16 +293,13 @@ D) Respuesta 4
           unanswered++;
         }
       });
-      
       if (unanswered > 0) {
         alert(`⚠️ Tienes ${unanswered} pregunta(s) sin responder`);
         return;
       }
-      
       const percentage = Math.round((score / totalQuestions) * 100);
       let resultClass = 'result-danger';
       let emoji = '😞';
-      
       if (percentage >= 90) {
         resultClass = 'result-success';
         emoji = '🎉';
@@ -343,7 +307,6 @@ D) Respuesta 4
         resultClass = 'result-warning';
         emoji = '😊';
       }
-      
       resultDiv.innerHTML = `
         <div class="${resultClass}">
           ${emoji} <strong>Resultado:</strong> ${score} de ${totalQuestions} correctas
@@ -351,12 +314,9 @@ D) Respuesta 4
           <strong>Nota:</strong> ${percentage}%
         </div>
       `;
-      
-      // Scroll al resultado
       resultDiv.scrollIntoView({ behavior: 'smooth' });
     }
 
-    // Permitir Enter para cargar test
     pdfList.addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
         loadBtn.click();
@@ -364,23 +324,4 @@ D) Respuesta 4
     });
   </script>
 </body>
-</html>'''
-
-# Guardar el archivo HTML
-with open('index.html', 'w', encoding='utf-8') as f:
-    f.write(html_content)
-
-print("✅ Archivo index.html creado correctamente!")
-print("\n📋 Instrucciones:")
-print("1. Descarga el archivo index.html")
-print("2. Crea una carpeta para tu proyecto")
-print("3. Pon el index.html y tus PDFs en la misma carpeta")
-print("4. Edita las líneas del <select> para añadir tus PDFs")
-print("5. Sube todo a GitHub y activa GitHub Pages")
-print("\n🎯 Formato de PDF esperado:")
-print("1. ¿Pregunta aquí?")
-print("A) Respuesta 1")
-print("B) Respuesta 2 *")
-print("C) Respuesta 3")
-print("D) Respuesta 4")
-print("\n* El asterisco marca la respuesta correcta")
+</html>
