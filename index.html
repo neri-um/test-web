@@ -270,15 +270,35 @@ D) Respuesta 4
   if (wrongAnswers.length > 0) {
     html += `<div style="margin-top:2em;">
       <strong>Preguntas falladas:</strong>
-      <ol>`;
+      <div>`;
     wrongAnswers.forEach(w => {
-      html += `<li style="margin-bottom:1em;">
-        <div><strong>${w.number}. ${w.text}</strong></div>
-        <div>Tu respuesta: <span style="color:#dc3545">${String.fromCharCode(65 + w.selected)}) ${w.answers[w.selected]}</span></div>
-        <div>Respuesta correcta: <span style="color:#28a745">${String.fromCharCode(65 + w.correct)}) ${w.answers[w.correct]}</span></div>
-      </li>`;
+      html += `
+        <div class="question" style="background:#fffbe6; border-left:4px solid #dc3545;">
+          <div class="question-text">${w.number}. ${w.text}</div>
+          <div class="answers">
+      `;
+      w.answers.forEach((ans, j) => {
+        let style = '';
+        let icon = '';
+        if (j === w.correct) {
+          style = 'background:#d4edda; color:#155724; font-weight:bold;';
+          icon = '✔️';
+        }
+        if (j === w.selected && w.selected !== w.correct) {
+          style = 'background:#f8d7da; color:#721c24;';
+          icon = '❌';
+        }
+        html += `
+          <div style="display:flex;align-items:center;${style}padding:0.4em 0.6em;border-radius:3px;margin-bottom:0.4em;">
+            <span style="width:2em;display:inline-block;">${String.fromCharCode(65 + j)})</span>
+            <span style="flex:1;">${ans}</span>
+            <span style="margin-left:0.5em;">${icon}</span>
+          </div>
+        `;
+      });
+      html += `</div></div>`;
     });
-    html += `</ol></div>`;
+    html += `</div></div>`;
   }
 
   resultDiv.innerHTML = html;
