@@ -1,8 +1,26 @@
 [
-  { "file": "ar/testt1.pdf", "name": "Tema 1" },
-  { "file": "ar/testt2.pdf", "name": "Tema 2" },
-  { "file": "ar/testt3.pdf", "name": "Tema 3" },
-  { "file": "ar/testt4.pdf", "name": "Tema 4" },
-  { "file": "ar/testt5.pdf", "name": "Tema 5" },
-  { "file": "ar/testt6.pdf", "name": "Tema 6" }
+  {
+    "subject": "Arquitectura de redes",
+    "tests": [
+      { "file": "ar/testt1.pdf", "name": "Tema 1" },
+      { "file": "ar/testt2.pdf", "name": "Tema 2" },
+      { "file": "ar/testt3.pdf", "name": "Tema 3" },
+      { "file": "ar/testt4.pdf", "name": "Tema 4" },
+      { "file": "ar/testt5.pdf", "name": "Tema 5" },
+      { "file": "ar/testt6.pdf", "name": "Tema 6" }
+    ]
+  },
+  {
+    "subject": "Sistemas Operativos",
+    "tests": [
+      { "file": "so/test1.pdf", "name": "Test 1 - Procesos" },
+      { "file": "so/test2.pdf", "name": "Test 2 - Memoria" }
+    ]
+  },
+  {
+    "subject": "Bases de Datos",
+    "tests": [
+      { "file": "bd/test1.pdf", "name": "Test 1 - SQL Básico" }
+    ]
+  }
 ]
