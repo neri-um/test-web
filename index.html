@@ -106,19 +106,17 @@
 
 function parseQuestions(text) {
   // Normaliza saltos de línea y espacios
-  text = text.replace(/\r/g, '').replace(/\n\s*/g, '\n');
-  // Fuerza salto de línea antes de cada opción, aunque haya espacios
-  text = text.replace(/([A-D])\s*\)/g, '\n$1)');
+  text = text.replace(/\r/g, ' ').replace(/\n/g, ' ');
   // Divide por preguntas usando el patrón "número. texto"
-  const questionBlocks = text.split(/\n?\d+\s*\.\s*/).filter(Boolean);
+  const questionBlocks = text.split(/\d+\s*\.\s*/).filter(Boolean);
   questions = [];
   questionBlocks.forEach((block, idx) => {
     // Busca el enunciado (hasta la primera opción)
-    const enunciadoMatch = block.match(/^([^\n]+?)(?=\s*[A-D]\))/);
+    const enunciadoMatch = block.match(/^([^\nA-D]+?)(?=\s*[A-D]\))/);
     if (!enunciadoMatch) return;
     const enunciado = enunciadoMatch[1].trim();
-    // Busca todas las opciones (A, B, C, D), aunque haya solo 2 o 3
-    const answerRegex = /^([A-D])\)\s*([^\n]*?)(?:\s*$|\n)/gm;
+    // Busca todas las opciones (A, B, C, D), aunque estén pegadas
+    const answerRegex = /([A-D])\)\s*([\s\S]*?)(?=\s*[A-D]\)|$)/g;
     let answers = [];
     let correct = null;
     let ansMatch;
