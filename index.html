@@ -25,6 +25,15 @@
     .loading { text-align: center; color: #666; font-style: italic; }
     .error { color: #dc3545; background: #f8d7da; padding: 1em; border-radius: 4px; margin: 1em 0; }
     @media (max-width: 600px) { body { margin: 1em; } .container { padding: 1em; } }
+    .answer-correct {
+  background: #d4edda !important;
+  color: #155724 !important;
+  font-weight: bold;
+}
+.answer-wrong {
+  background: #f8d7da !important;
+  color: #721c24 !important;
+}
   </style>
 </head>
 <body>
@@ -218,7 +227,7 @@ D) Respuesta 4
       };
     }
 
-    function calculateScore() {
+function calculateScore() {
   let score = 0;
   let totalQuestions = questions.length;
   let unanswered = 0;
@@ -273,27 +282,27 @@ D) Respuesta 4
       <div>`;
     wrongAnswers.forEach(w => {
       html += `
-        <div class="question" style="background:#fffbe6; border-left:4px solid #dc3545;">
+        <div class="question" style="border-left:4px solid #dc3545;">
           <div class="question-text">${w.number}. ${w.text}</div>
           <div class="answers">
       `;
       w.answers.forEach((ans, j) => {
-        let style = '';
+        let extraClass = '';
         let icon = '';
         if (j === w.correct) {
-          style = 'background:#d4edda; color:#155724; font-weight:bold;';
+          extraClass = 'answer-correct';
           icon = '✔️';
         }
         if (j === w.selected && w.selected !== w.correct) {
-          style = 'background:#f8d7da; color:#721c24;';
+          extraClass = 'answer-wrong';
           icon = '❌';
         }
         html += `
-          <div style="display:flex;align-items:center;${style}padding:0.4em 0.6em;border-radius:3px;margin-bottom:0.4em;">
-            <span style="width:2em;display:inline-block;">${String.fromCharCode(65 + j)})</span>
-            <span style="flex:1;">${ans}</span>
+          <label class="${extraClass}" style="display:block; margin-bottom:0.8em; padding:0.5em; border-radius:3px;">
+            <span style="margin-right:0.5em;">${String.fromCharCode(65 + j)})</span>
+            ${ans}
             <span style="margin-left:0.5em;">${icon}</span>
-          </div>
+          </label>
         `;
       });
       html += `</div></div>`;
