@@ -107,6 +107,8 @@
 function parseQuestions(text) {
   // Normaliza saltos de línea y espacios
   text = text.replace(/\r/g, '').replace(/\n\s*/g, '\n');
+  // Fuerza salto de línea antes de cada opción
+  text = text.replace(/([A-D])\)/g, '\n$1)');
   // Divide por preguntas usando el patrón "número. texto"
   const questionBlocks = text.split(/\n?\d+\s*\.\s*/).filter(Boolean);
   questions = [];
@@ -116,7 +118,7 @@ function parseQuestions(text) {
     if (!enunciadoMatch) return;
     const enunciado = enunciadoMatch[1].trim();
     // Busca todas las opciones
-    const answerRegex = /([A-D])\)\s*([^\n]*\*?)/g;
+    const answerRegex = /^([A-D])\)\s*(.*?)(?:\s*$|\n)/gm;
     let answers = [];
     let correct = null;
     let ansMatch;
