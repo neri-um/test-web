@@ -1,0 +1,386 @@
+html_content = '''<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test desde PDF</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      margin: 2em; 
+      background-color: #f5f5f5;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 2em;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      text-align: center;
+      margin-bottom: 2em;
+    }
+    .test-selector {
+      margin-bottom: 2em;
+      padding: 1em;
+      background: #f8f9fa;
+      border-radius: 5px;
+    }
+    select {
+      width: 100%;
+      padding: 0.5em;
+      margin-bottom: 1em;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1em;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 0.7em 1.5em;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1em;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    button:disabled {
+      background: #6c757d;
+      cursor: not-allowed;
+    }
+    .question { 
+      margin-bottom: 2em; 
+      padding: 1em;
+      background: #f8f9fa;
+      border-radius: 5px;
+      border-left: 4px solid #007bff;
+    }
+    .question-text {
+      font-weight: bold;
+      margin-bottom: 1em;
+      color: #333;
+    }
+    .answers label { 
+      display: block; 
+      margin-bottom: 0.8em;
+      padding: 0.5em;
+      background: white;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .answers label:hover {
+      background: #e9ecef;
+    }
+    .answers input[type="radio"] {
+      margin-right: 0.5em;
+    }
+    #result { 
+      font-size: 1.3em; 
+      font-weight: bold; 
+      margin-top: 2em;
+      padding: 1em;
+      text-align: center;
+      border-radius: 5px;
+    }
+    .result-success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .result-warning {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeaa7;
+    }
+    .result-danger {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .loading {
+      text-align: center;
+      color: #666;
+      font-style: italic;
+    }
+    .error {
+      color: #dc3545;
+      background: #f8d7da;
+      padding: 1em;
+      border-radius: 4px;
+      margin: 1em 0;
+    }
+    @media (max-width: 600px) {
+      body { margin: 1em; }
+      .container { padding: 1em; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📚 Test desde PDF</h1>
+    
+    <div class="test-selector">
+      <label for="pdfList"><strong>Elige un test:</strong></label>
+      <select id="pdfList">
+        <option value="">-- Selecciona un test --</option>
+        <option value="test1.pdf">Test 1 - Tema 1</option>
+        <option value="test2.pdf">Test 2 - Tema 2</option>
+        <option value="test3.pdf">Test 3 - Tema 3</option>
+        <option value="matematicas.pdf">Matemáticas - Álgebra</option>
+        <option value="historia.pdf">Historia - Edad Media</option>
+        <!-- Añade más tests aquí -->
+      </select>
+      <button id="loadPdfBtn">🚀 Cargar test</button>
+    </div>
+    
+    <div id="testContainer"></div>
+    <div id="result"></div>
+  </div>
+
+  <!-- pdf.js library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    const loadBtn = document.getElementById('loadPdfBtn');
+    const pdfList = document.getElementById('pdfList');
+    const testContainer = document.getElementById('testContainer');
+    const resultDiv = document.getElementById('result');
+    let questions = [];
+    let currentTest = '';
+
+    loadBtn.onclick = async () => {
+      const pdfFile = pdfList.value;
+      if (!pdfFile) {
+        alert('⚠️ Por favor, selecciona un test');
+        return;
+      }
+      
+      currentTest = pdfList.options[pdfList.selectedIndex].text;
+      testContainer.innerHTML = '<div class="loading">📖 Cargando PDF y extrayendo preguntas...</div>';
+      resultDiv.innerHTML = '';
+      questions = [];
+      loadBtn.disabled = true;
+
+      try {
+        // Cargar PDF desde el servidor
+        const response = await fetch(pdfFile);
+        if (!response.ok) {
+          throw new Error(`No se pudo cargar el archivo: ${response.status}`);
+        }
+        
+        const arrayBuffer = await response.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let text = '';
+        
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          text += content.items.map(item => item.str).join(' ') + '\\n';
+        }
+        
+        parseQuestions(text);
+        renderTest();
+        
+      } catch (error) {
+        testContainer.innerHTML = `<div class="error">❌ Error al cargar el PDF: ${error.message}</div>`;
+        console.error('Error:', error);
+      } finally {
+        loadBtn.disabled = false;
+      }
+    };
+
+    function parseQuestions(text) {
+      // Limpiar el texto
+      text = text.replace(/\\s+/g, ' ').trim();
+      
+      // Expresión regular mejorada para preguntas
+      const questionRegex = /(\\d+)\\s*\\.\\s*([^\\n]+?)(?=\\s*[A-D]\\s*\\))/g;
+      
+      let match;
+      questions = [];
+      let questionMatches = [];
+      
+      // Primero, encontrar todas las preguntas
+      while ((match = questionRegex.exec(text)) !== null) {
+        questionMatches.push({
+          number: parseInt(match[1]),
+          text: match[2].trim(),
+          index: match.index,
+          fullMatch: match[0]
+        });
+      }
+      
+      // Para cada pregunta, buscar sus respuestas
+      questionMatches.forEach((qMatch, i) => {
+        const startIndex = qMatch.index + qMatch.fullMatch.length;
+        const endIndex = i < questionMatches.length - 1 ? 
+          questionMatches[i + 1].index : text.length;
+        
+        const answerBlock = text.slice(startIndex, endIndex);
+        
+        // Buscar respuestas en el bloque
+        const answerRegex = /([A-D])\\s*\\)\\s*([^A-D\\n]+?)(?=\\s*[A-D]\\s*\\)|$)/g;
+        let answers = [];
+        let correct = null;
+        let ansMatch;
+        
+        while ((ansMatch = answerRegex.exec(answerBlock)) !== null) {
+          let answerText = ansMatch[2].trim();
+          
+          // Verificar si tiene asterisco (respuesta correcta)
+          if (answerText.includes('*')) {
+            correct = answers.length;
+            answerText = answerText.replace(/\\*+/g, '').trim();
+          }
+          
+          answers.push(answerText);
+        }
+        
+        if (answers.length > 0) {
+          questions.push({
+            number: qMatch.number,
+            text: qMatch.text,
+            answers: answers,
+            correct: correct
+          });
+        }
+      });
+      
+      // Ordenar preguntas por número
+      questions.sort((a, b) => a.number - b.number);
+    }
+
+    function renderTest() {
+      if (questions.length === 0) {
+        testContainer.innerHTML = `
+          <div class="error">
+            ❌ No se encontraron preguntas en el PDF. 
+            <br><br>
+            <strong>Formato esperado:</strong>
+            <pre>
+1. ¿Pregunta aquí?
+A) Respuesta 1
+B) Respuesta 2 *
+C) Respuesta 3
+D) Respuesta 4
+            </pre>
+            <small>* El asterisco marca la respuesta correcta</small>
+          </div>
+        `;
+        return;
+      }
+      
+      let html = `
+        <div style="margin-bottom: 2em;">
+          <h2>📝 ${currentTest}</h2>
+          <p><strong>${questions.length}</strong> preguntas encontradas</p>
+        </div>
+        <form id="testForm">
+      `;
+      
+      questions.forEach((q, i) => {
+        html += `
+          <div class="question">
+            <div class="question-text">${q.number}. ${q.text}</div>
+            <div class="answers">
+        `;
+        
+        q.answers.forEach((ans, j) => {
+          html += `
+            <label>
+              <input type="radio" name="q${i}" value="${j}" required>
+              ${String.fromCharCode(65 + j)}) ${ans}
+            </label>
+          `;
+        });
+        
+        html += '</div></div>';
+      });
+      
+      html += '<button type="submit" style="width: 100%; padding: 1em; font-size: 1.1em;">✅ Corregir Test</button></form>';
+      testContainer.innerHTML = html;
+
+      document.getElementById('testForm').onsubmit = function(e) {
+        e.preventDefault();
+        calculateScore();
+      };
+    }
+
+    function calculateScore() {
+      let score = 0;
+      let totalQuestions = questions.length;
+      let unanswered = 0;
+      
+      questions.forEach((q, i) => {
+        const selected = document.querySelector(`input[name="q${i}"]:checked`);
+        if (selected) {
+          if (parseInt(selected.value) === q.correct) {
+            score++;
+          }
+        } else {
+          unanswered++;
+        }
+      });
+      
+      if (unanswered > 0) {
+        alert(`⚠️ Tienes ${unanswered} pregunta(s) sin responder`);
+        return;
+      }
+      
+      const percentage = Math.round((score / totalQuestions) * 100);
+      let resultClass = 'result-danger';
+      let emoji = '😞';
+      
+      if (percentage >= 90) {
+        resultClass = 'result-success';
+        emoji = '🎉';
+      } else if (percentage >= 70) {
+        resultClass = 'result-warning';
+        emoji = '😊';
+      }
+      
+      resultDiv.innerHTML = `
+        <div class="${resultClass}">
+          ${emoji} <strong>Resultado:</strong> ${score} de ${totalQuestions} correctas
+          <br>
+          <strong>Nota:</strong> ${percentage}%
+        </div>
+      `;
+      
+      // Scroll al resultado
+      resultDiv.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Permitir Enter para cargar test
+    pdfList.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        loadBtn.click();
+      }
+    });
+  </script>
+</body>
+</html>'''
+
+# Guardar el archivo HTML
+with open('index.html', 'w', encoding='utf-8') as f:
+    f.write(html_content)
+
+print("✅ Archivo index.html creado correctamente!")
+print("\n📋 Instrucciones:")
+print("1. Descarga el archivo index.html")
+print("2. Crea una carpeta para tu proyecto")
+print("3. Pon el index.html y tus PDFs en la misma carpeta")
+print("4. Edita las líneas del <select> para añadir tus PDFs")
+print("5. Sube todo a GitHub y activa GitHub Pages")
+print("\n🎯 Formato de PDF esperado:")
+print("1. ¿Pregunta aquí?")
+print("A) Respuesta 1")
+print("B) Respuesta 2 *")
+print("C) Respuesta 3")
+print("D) Respuesta 4")
+print("\n* El asterisco marca la respuesta correcta")
