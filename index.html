@@ -62,15 +62,26 @@
     @media (max-width: 600px) { body { margin: 1em; } .container { padding: 1em; } }
 
     /* SOLO afecta a la corrección, no al test */
+    #result .answers {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8em;
+    }
     #result .answers label {
-      display: block !important;
-      margin-bottom: 0.8em;
-      padding: 0.5em;
+      display: flex !important;
+      align-items: center;
+      width: fit-content;
+      max-width: 100%;
+      min-width: 0;
+      margin-bottom: 0;
+      padding: 0.5em 1em 0.5em 0.5em;
       background: white;
       border-radius: 3px;
       font-size: 1em !important;
       font-weight: normal !important;
       color: #333 !important;
+      white-space: normal;
+      box-sizing: border-box;
     }
     #result .answer-correct {
       background: #d4edda !important;
