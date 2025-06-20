@@ -107,8 +107,8 @@
 function parseQuestions(text) {
   // Normaliza saltos de línea y espacios
   text = text.replace(/\r/g, '').replace(/\n\s*/g, '\n');
-  // Fuerza salto de línea antes de cada opción
-  text = text.replace(/([A-D])\)/g, '\n$1)');
+  // Fuerza salto de línea antes de cada opción, aunque haya espacios
+  text = text.replace(/([A-D])\s*\)/g, '\n$1)');
   // Divide por preguntas usando el patrón "número. texto"
   const questionBlocks = text.split(/\n?\d+\s*\.\s*/).filter(Boolean);
   questions = [];
@@ -118,7 +118,7 @@ function parseQuestions(text) {
     if (!enunciadoMatch) return;
     const enunciado = enunciadoMatch[1].trim();
     // Busca todas las opciones
-    const answerRegex = /^([A-D])\)\s*(.*?)(?:\s*$|\n)/gm;
+    const answerRegex = /^([A-D])\)\s*([^A-D]*?(?:\*+)?)(?=\n[A-D]\)|$)/gm;
     let answers = [];
     let correct = null;
     let ansMatch;
@@ -139,7 +139,6 @@ function parseQuestions(text) {
   questions.sort((a, b) => a.number - b.number);
 }
 
-
     function renderTest() {
       if (questions.length === 0) {
         testContainer.innerHTML = `
@@ -152,7 +151,6 @@ function parseQuestions(text) {
 A) Respuesta 1
 B) Respuesta 2 *
 C) Respuesta 3
-D) Respuesta 4
             </pre>
             <small>* El asterisco marca la respuesta correcta</small>
           </div>
