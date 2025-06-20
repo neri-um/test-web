@@ -35,7 +35,7 @@
       <select id="pdfList">
         <option value="">-- Selecciona un test --</option>
       </select>
-      <button id="loadPdfBtn">Cargar test 🤓</button>
+      <button id="loadPdfBtn">🚀 Cargar test</button>
     </div>
     <div id="testContainer"></div>
     <div id="result"></div>
@@ -94,6 +94,8 @@
           const content = await page.getTextContent();
           text += content.items.map(item => item.str).join(' ') + '\n';
         }
+        // Imprime el texto extraído para depuración
+        console.log('Texto extraído:', text);
         parseQuestions(text);
         renderTest();
       } catch (error) {
@@ -104,39 +106,39 @@
       }
     };
 
-function parseQuestions(text) {
-  // Normaliza saltos de línea y espacios
-  text = text.replace(/\r/g, ' ').replace(/\n/g, ' ');
-  // Divide por preguntas usando el patrón "número. texto"
-  const questionBlocks = text.split(/\d+\s*\.\s*/).filter(Boolean);
-  questions = [];
-  questionBlocks.forEach((block, idx) => {
-    // Busca el enunciado (hasta la primera opción)
-    const enunciadoMatch = block.match(/^([^\nA-D]+?)(?=\s*[A-D]\))/);
-    if (!enunciadoMatch) return;
-    const enunciado = enunciadoMatch[1].trim();
-    // Busca todas las opciones (A, B, C, D), aunque estén pegadas
-    const answerRegex = /([A-D])\)\s*([\s\S]*?)(?=\s*[A-D]\)|$)/g;
-    let answers = [];
-    let correct = null;
-    let ansMatch;
-    while ((ansMatch = answerRegex.exec(block)) !== null) {
-      let answerText = ansMatch[2].replace(/\*+/g, '').trim();
-      if (ansMatch[2].includes('*')) correct = answers.length;
-      answers.push(answerText);
-    }
-    if (answers.length > 0) {
-      questions.push({
-        number: idx + 1,
-        text: enunciado,
-        answers: answers,
-        correct: correct
+    function parseQuestions(text) {
+      // Normaliza saltos de línea y espacios
+      text = text.replace(/\r/g, ' ').replace(/\n/g, ' ');
+      // Separa preguntas de forma robusta: número, punto, espacio
+      const questionBlocks = text.split(/(?:^|\s)\d+\s*\.\s*/).filter(Boolean);
+      questions = [];
+      questionBlocks.forEach((block, idx) => {
+        // Busca el enunciado (hasta la primera opción)
+        const enunciadoMatch = block.match(/^([^\nA-D]+?)(?=\s*[A-D]\))/);
+        if (!enunciadoMatch) return;
+        const enunciado = enunciadoMatch[1].trim();
+        // Busca todas las opciones (A, B, C, D), aunque estén pegadas
+        const answerRegex = /([A-D])\)\s*([\s\S]*?)(?=\s*[A-D]\)|$)/g;
+        let answers = [];
+        let correct = null;
+        let ansMatch;
+        while ((ansMatch = answerRegex.exec(block)) !== null) {
+          let answerText = ansMatch[2].replace(/\*+/g, '').trim();
+          if (ansMatch[2].includes('*')) correct = answers.length;
+          answers.push(answerText);
+        }
+        if (answers.length > 0) {
+          questions.push({
+            number: idx + 1,
+            text: enunciado,
+            answers: answers,
+            correct: correct
+          });
+        }
       });
+      questions.sort((a, b) => a.number - b.number);
     }
-  });
-  questions.sort((a, b) => a.number - b.number);
-}
-    
+
     function renderTest() {
       if (questions.length === 0) {
         testContainer.innerHTML = `
@@ -149,6 +151,7 @@ function parseQuestions(text) {
 A) Respuesta 1
 B) Respuesta 2 *
 C) Respuesta 3
+D) Respuesta 4
             </pre>
             <small>* El asterisco marca la respuesta correcta</small>
           </div>
