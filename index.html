@@ -106,10 +106,14 @@
       }
     };
 
-   function parseQuestions(text) {
+  function parseQuestions(text) {
   // Normaliza saltos de línea y espacios
   text = text.replace(/\r/g, '').replace(/\n\s*/g, '\n');
-  // Separa preguntas: número al inicio de línea, punto y espacio
+  // Fuerza salto de línea antes de cada número de pregunta
+  text = text.replace(/(\d+)\.\s/g, '\n$1. ');
+  // Fuerza salto de línea antes de cada opción
+  text = text.replace(/([A-D])\)/g, '\n$1)');
+  // Separa preguntas por salto de línea y número
   const questionBlocks = text.split(/\n\d+\.\s/).filter(Boolean);
   questions = [];
   questionBlocks.forEach((block, idx) => {
