@@ -117,8 +117,8 @@ function parseQuestions(text) {
     const enunciadoMatch = block.match(/^([^\n]+?)(?=\s*[A-D]\))/);
     if (!enunciadoMatch) return;
     const enunciado = enunciadoMatch[1].trim();
-    // Busca todas las opciones
-    const answerRegex = /^([A-D])\)\s*([^A-D]*?(?:\*+)?)(?=\n[A-D]\)|$)/gm;
+    // Busca todas las opciones (A, B, C, D), aunque haya solo 2 o 3
+    const answerRegex = /^([A-D])\)\s*([^\n]*?)(?:\s*$|\n)/gm;
     let answers = [];
     let correct = null;
     let ansMatch;
@@ -138,7 +138,7 @@ function parseQuestions(text) {
   });
   questions.sort((a, b) => a.number - b.number);
 }
-
+    
     function renderTest() {
       if (questions.length === 0) {
         testContainer.innerHTML = `
