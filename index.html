@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Neri Test</title>
+  <title>Neri Test 🤓</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 2em; background-color: #f5f5f5; }
     .container { max-width: 800px; margin: 0 auto; background: white; padding: 2em; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);}
@@ -29,13 +29,17 @@
 </head>
 <body>
   <div class="container">
-    <h1>Neri Test</h1>
+    <h1>Neri Test por Asignaturas</h1>
     <div class="test-selector">
+      <label for="subjectList"><strong>Elige asignatura:</strong></label>
+      <select id="subjectList">
+        <option value="">-- Selecciona asignatura --</option>
+      </select>
       <label for="pdfList"><strong>Elige un test:</strong></label>
-      <select id="pdfList">
+      <select id="pdfList" disabled>
         <option value="">-- Selecciona un test --</option>
       </select>
-      <button id="loadPdfBtn">Cargar test 🤓</button>
+      <button id="loadPdfBtn">Cargar test</button>
     </div>
     <div id="testContainer"></div>
     <div id="result"></div>
@@ -44,16 +48,22 @@
   <!-- pdf.js library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script>
-    // Cargar la lista de tests desde tests.json
+    let allTests = [];
+    let currentSubject = null;
+    let questions = [];
+    let currentTest = '';
+
+    // Cargar la lista de tests agrupados por asignatura
     fetch('tests.json')
       .then(response => response.json())
-      .then(tests => {
-        const pdfList = document.getElementById('pdfList');
-        tests.forEach(test => {
+      .then(subjects => {
+        allTests = subjects;
+        const subjectList = document.getElementById('subjectList');
+        subjects.forEach(subj => {
           const option = document.createElement('option');
-          option.value = test.file;
-          option.textContent = test.name;
-          pdfList.appendChild(option);
+          option.value = subj.subject;
+          option.textContent = subj.subject;
+          subjectList.appendChild(option);
         });
       })
       .catch(error => {
@@ -61,12 +71,27 @@
         console.error(error);
       });
 
+    document.getElementById('subjectList').onchange = function() {
+      const subject = this.value;
+      const pdfList = document.getElementById('pdfList');
+      pdfList.innerHTML = '<option value="">-- Selecciona un test --</option>';
+      pdfList.disabled = !subject;
+      if (!subject) return;
+      const subj = allTests.find(s => s.subject === subject);
+      if (subj) {
+        subj.tests.forEach(test => {
+          const option = document.createElement('option');
+          option.value = test.file;
+          option.textContent = test.name;
+          pdfList.appendChild(option);
+        });
+      }
+    };
+
     const loadBtn = document.getElementById('loadPdfBtn');
     const pdfList = document.getElementById('pdfList');
     const testContainer = document.getElementById('testContainer');
     const resultDiv = document.getElementById('result');
-    let questions = [];
-    let currentTest = '';
 
     loadBtn.onclick = async () => {
       const pdfFile = pdfList.value;
@@ -94,6 +119,9 @@
           const content = await page.getTextContent();
           text += content.items.map(item => item.str).join(' ') + '\n';
         }
+        // Forzar saltos de línea antes de cada número de pregunta y opción
+        text = text.replace(/(\d+)\.\s/g, '\n$1. ');
+        text = text.replace(/([A-D])\)/g, '\n$1)');
         // Imprime el texto extraído para depuración
         console.log('Texto extraído:', text);
         parseQuestions(text);
@@ -106,42 +134,38 @@
       }
     };
 
-  function parseQuestions(text) {
-  // Normaliza saltos de línea y espacios
-  text = text.replace(/\r/g, '').replace(/\n\s*/g, '\n');
-  // Fuerza salto de línea antes de cada número de pregunta
-  text = text.replace(/(\d+)\.\s/g, '\n$1. ');
-  // Fuerza salto de línea antes de cada opción
-  text = text.replace(/([A-D])\)/g, '\n$1)');
-  // Separa preguntas por salto de línea y número
-  const questionBlocks = text.split(/\n\d+\.\s/).filter(Boolean);
-  questions = [];
-  questionBlocks.forEach((block, idx) => {
-    // Busca el enunciado (hasta la primera opción)
-    const enunciadoMatch = block.match(/^([^\n]+?)(?=\n[A-D]\))/);
-    if (!enunciadoMatch) return;
-    const enunciado = enunciadoMatch[1].trim();
-    // Busca todas las opciones (A, B, C, D), cada una en línea nueva
-    const answerRegex = /^([A-D])\)\s*(.*?)(?:\s*$|\n)/gm;
-    let answers = [];
-    let correct = null;
-    let ansMatch;
-    while ((ansMatch = answerRegex.exec(block)) !== null) {
-      let answerText = ansMatch[2].replace(/\*+$/, '').trim();
-      if (ansMatch[2].trim().endsWith('*')) correct = answers.length;
-      answers.push(answerText);
-    }
-    if (answers.length > 0) {
-      questions.push({
-        number: idx + 1,
-        text: enunciado,
-        answers: answers,
-        correct: correct
+    function parseQuestions(text) {
+      // Normaliza saltos de línea y espacios
+      text = text.replace(/\r/g, '').replace(/\n\s*/g, '\n');
+      // Separa preguntas por salto de línea y número
+      const questionBlocks = text.split(/\n\d+\.\s/).filter(Boolean);
+      questions = [];
+      questionBlocks.forEach((block, idx) => {
+        // Busca el enunciado (hasta la primera opción)
+        const enunciadoMatch = block.match(/^([^\n]+?)(?=\n[A-D]\))/);
+        if (!enunciadoMatch) return;
+        const enunciado = enunciadoMatch[1].trim();
+        // Busca todas las opciones (A, B, C, D), cada una en línea nueva
+        const answerRegex = /^([A-D])\)\s*(.*?)(?:\s*$|\n)/gm;
+        let answers = [];
+        let correct = null;
+        let ansMatch;
+        while ((ansMatch = answerRegex.exec(block)) !== null) {
+          let answerText = ansMatch[2].replace(/\*+$/, '').trim();
+          if (ansMatch[2].trim().endsWith('*')) correct = answers.length;
+          answers.push(answerText);
+        }
+        if (answers.length > 0) {
+          questions.push({
+            number: idx + 1,
+            text: enunciado,
+            answers: answers,
+            correct: correct
+          });
+        }
       });
+      questions.sort((a, b) => a.number - b.number);
     }
-  });
-  questions.sort((a, b) => a.number - b.number);
-}
 
     function renderTest() {
       if (questions.length === 0) {
@@ -231,12 +255,6 @@ D) Respuesta 4
       `;
       resultDiv.scrollIntoView({ behavior: 'smooth' });
     }
-
-    pdfList.addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') {
-        loadBtn.click();
-      }
-    });
   </script>
 </body>
 </html>
