@@ -106,25 +106,25 @@
       }
     };
 
-    function parseQuestions(text) {
+   function parseQuestions(text) {
   // Normaliza saltos de línea y espacios
-  text = text.replace(/\r/g, ' ').replace(/\n/g, ' ');
-  // Separa preguntas de forma ultra-tolerante: cualquier cosa que no sea número, seguido de 1-3 dígitos, punto y espacio
-  const questionBlocks = text.split(/(?:^|[^\d])\d{1,3}\s*\.\s*/g).filter(Boolean);
+  text = text.replace(/\r/g, '').replace(/\n\s*/g, '\n');
+  // Separa preguntas: número al inicio de línea, punto y espacio
+  const questionBlocks = text.split(/\n\d+\.\s/).filter(Boolean);
   questions = [];
   questionBlocks.forEach((block, idx) => {
     // Busca el enunciado (hasta la primera opción)
-    const enunciadoMatch = block.match(/^([^\nA-D]+?)(?=\s*[A-D]\))/);
+    const enunciadoMatch = block.match(/^([^\n]+?)(?=\n[A-D]\))/);
     if (!enunciadoMatch) return;
     const enunciado = enunciadoMatch[1].trim();
-    // Busca todas las opciones (A, B, C, D), aunque estén pegadas
-    const answerRegex = /([A-D])\)\s*([\s\S]*?)(?=\s*[A-D]\)|$)/g;
+    // Busca todas las opciones (A, B, C, D), cada una en línea nueva
+    const answerRegex = /^([A-D])\)\s*(.*?)(?:\s*$|\n)/gm;
     let answers = [];
     let correct = null;
     let ansMatch;
     while ((ansMatch = answerRegex.exec(block)) !== null) {
-      let answerText = ansMatch[2].replace(/\*+/g, '').trim();
-      if (ansMatch[2].includes('*')) correct = answers.length;
+      let answerText = ansMatch[2].replace(/\*+$/, '').trim();
+      if (ansMatch[2].trim().endsWith('*')) correct = answers.length;
       answers.push(answerText);
     }
     if (answers.length > 0) {
