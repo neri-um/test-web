@@ -104,48 +104,39 @@
       }
     };
 
-    function parseQuestions(text) {
-      text = text.replace(/\s+/g, ' ').trim();
-      const questionRegex = /(\d+)\s*\.\s*([^\n]+?)(?=\s*[A-D]\s*\))/g;
-      let match;
-      questions = [];
-      let questionMatches = [];
-      while ((match = questionRegex.exec(text)) !== null) {
-        questionMatches.push({
-          number: parseInt(match[1]),
-          text: match[2].trim(),
-          index: match.index,
-          fullMatch: match[0]
-        });
-      }
-      questionMatches.forEach((qMatch, i) => {
-        const startIndex = qMatch.index + qMatch.fullMatch.length;
-        const endIndex = i < questionMatches.length - 1 ? 
-          questionMatches[i + 1].index : text.length;
-        const answerBlock = text.slice(startIndex, endIndex);
-        const answerRegex = /([A-D])\s*\)\s*([^A-D\n]+?)(?=\s*[A-D]\s*\)|$)/g;
-        let answers = [];
-        let correct = null;
-        let ansMatch;
-        while ((ansMatch = answerRegex.exec(answerBlock)) !== null) {
-          let answerText = ansMatch[2].trim();
-          if (answerText.includes('*')) {
-            correct = answers.length;
-            answerText = answerText.replace(/\*+/g, '').trim();
-          }
-          answers.push(answerText);
-        }
-        if (answers.length > 0) {
-          questions.push({
-            number: qMatch.number,
-            text: qMatch.text,
-            answers: answers,
-            correct: correct
-          });
-        }
-      });
-      questions.sort((a, b) => a.number - b.number);
+function parseQuestions(text) {
+  // Normaliza saltos de línea y espacios
+  text = text.replace(/\r/g, '').replace(/\n\s*/g, '\n');
+  // Divide por preguntas usando el patrón "número. texto"
+  const questionBlocks = text.split(/\n?\d+\s*\.\s*/).filter(Boolean);
+  questions = [];
+  questionBlocks.forEach((block, idx) => {
+    // Busca el enunciado (hasta la primera opción)
+    const enunciadoMatch = block.match(/^([^\n]+?)(?=\s*[A-D]\))/);
+    if (!enunciadoMatch) return;
+    const enunciado = enunciadoMatch[1].trim();
+    // Busca todas las opciones
+    const answerRegex = /([A-D])\)\s*([^\n]*\*?)/g;
+    let answers = [];
+    let correct = null;
+    let ansMatch;
+    while ((ansMatch = answerRegex.exec(block)) !== null) {
+      let answerText = ansMatch[2].replace(/\*+/g, '').trim();
+      if (ansMatch[2].includes('*')) correct = answers.length;
+      answers.push(answerText);
     }
+    if (answers.length > 0) {
+      questions.push({
+        number: idx + 1,
+        text: enunciado,
+        answers: answers,
+        correct: correct
+      });
+    }
+  });
+  questions.sort((a, b) => a.number - b.number);
+}
+
 
     function renderTest() {
       if (questions.length === 0) {
