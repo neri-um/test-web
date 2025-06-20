@@ -1,8 +1,8 @@
 [
-  { "file": "testt1.pdf", "name": "Tema 1" },
-  { "file": "testt2.pdf", "name": "Tema 2" },
-  { "file": "testt3.pdf", "name": "Tema 3" },
-  { "file": "testt4.pdf", "name": "Tema 4" },
-  { "file": "testt5.pdf", "name": "Tema 5" },
-  { "file": "testt6.pdf", "name": "Tema 6" }
+  { "file": "ar/testt1.pdf", "name": "Tema 1" },
+  { "file": "ar/testt2.pdf", "name": "Tema 2" },
+  { "file": "ar/testt3.pdf", "name": "Tema 3" },
+  { "file": "ar/testt4.pdf", "name": "Tema 4" },
+  { "file": "ar/testt5.pdf", "name": "Tema 5" },
+  { "file": "ar/testt6.pdf", "name": "Tema 6" }
 ]
