@@ -219,42 +219,71 @@ D) Respuesta 4
     }
 
     function calculateScore() {
-      let score = 0;
-      let totalQuestions = questions.length;
-      let unanswered = 0;
-      questions.forEach((q, i) => {
-        const selected = document.querySelector(`input[name="q${i}"]:checked`);
-        if (selected) {
-          if (parseInt(selected.value) === q.correct) {
-            score++;
-          }
-        } else {
-          unanswered++;
-        }
-      });
-      if (unanswered > 0) {
-        alert(`⚠️ Tienes ${unanswered} pregunta(s) sin responder`);
-        return;
+  let score = 0;
+  let totalQuestions = questions.length;
+  let unanswered = 0;
+  let wrongAnswers = [];
+
+  questions.forEach((q, i) => {
+    const selected = document.querySelector(`input[name="q${i}"]:checked`);
+    if (selected) {
+      if (parseInt(selected.value) === q.correct) {
+        score++;
+      } else {
+        wrongAnswers.push({
+          number: q.number,
+          text: q.text,
+          selected: parseInt(selected.value),
+          correct: q.correct,
+          answers: q.answers
+        });
       }
-      const percentage = Math.round((score / totalQuestions) * 100);
-      let resultClass = 'result-danger';
-      let emoji = '😞';
-      if (percentage >= 90) {
-        resultClass = 'result-success';
-        emoji = '🎉';
-      } else if (percentage >= 70) {
-        resultClass = 'result-warning';
-        emoji = '😊';
-      }
-      resultDiv.innerHTML = `
-        <div class="${resultClass}">
-          ${emoji} <strong>Resultado:</strong> ${score} de ${totalQuestions} correctas
-          <br>
-          <strong>Nota:</strong> ${percentage}%
-        </div>
-      `;
-      resultDiv.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      unanswered++;
     }
+  });
+
+  if (unanswered > 0) {
+    alert(`⚠️ Tienes ${unanswered} pregunta(s) sin responder`);
+    return;
+  }
+
+  const percentage = Math.round((score / totalQuestions) * 100);
+  let resultClass = 'result-danger';
+  let emoji = '😞';
+  if (percentage >= 90) {
+    resultClass = 'result-success';
+    emoji = '🎉';
+  } else if (percentage >= 70) {
+    resultClass = 'result-warning';
+    emoji = '😊';
+  }
+
+  let html = `
+    <div class="${resultClass}">
+      ${emoji} <strong>Resultado:</strong> ${score} de ${totalQuestions} correctas
+      <br>
+      <strong>Nota:</strong> ${percentage}%
+    </div>
+  `;
+
+  if (wrongAnswers.length > 0) {
+    html += `<div style="margin-top:2em;">
+      <strong>Preguntas falladas:</strong>
+      <ol>`;
+    wrongAnswers.forEach(w => {
+      html += `<li style="margin-bottom:1em;">
+        <div><strong>${w.number}. ${w.text}</strong></div>
+        <div>Tu respuesta: <span style="color:#dc3545">${String.fromCharCode(65 + w.selected)}) ${w.answers[w.selected]}</span></div>
+        <div>Respuesta correcta: <span style="color:#28a745">${String.fromCharCode(65 + w.correct)}) ${w.answers[w.correct]}</span></div>
+      </li>`;
+    });
+    html += `</ol></div>`;
+  }
+
+  resultDiv.innerHTML = html;
+  resultDiv.scrollIntoView({ behavior: 'smooth' });
+}
   </script>
 </body>
 </html>
